@@ -868,7 +868,7 @@ end
 -- inert and can be deleted whenever it is noticed.
 local function owner_installed()
   local home = os.getenv("HOME") or ""
-  local manifest = home .. "/.config/omarchy/plugins/io.github.knivfjell.remote-seat/manifest.json"
+  local manifest = home .. "/.config/omarchy/plugins/io.github.knivfjell.super-button/manifest.json"
   local handle = io.open(manifest, "r")
 
   if handle then

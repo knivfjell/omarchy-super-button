@@ -24,10 +24,10 @@ import json, pathlib, re, sys
 
 here, handle = sys.argv[1], sys.argv[2]
 root = pathlib.Path(here)
-new = f"io.github.{handle.lower()}.remote-seat"
+new = f"io.github.{handle.lower()}.super-button"
 
 # Any id this project has ever carried, in dotted or dashed form.
-ID = re.compile(r"(?:io\.github\.[A-Za-z0-9-]+|[A-Za-z0-9-]+)\.remote-seat")
+ID = re.compile(r"(?:io\.github\.[A-Za-z0-9-]+|[A-Za-z0-9-]+)\.super-button")
 
 manifest = root / "manifest.json"
 m = json.loads(manifest.read_text())
@@ -41,8 +41,8 @@ for rel in ("engine/remote-seat.lua", "RemoteSeat.qml", "bin/kseat", "README.md"
     p.write_text(ID.sub(new, p.read_text()))
 
 readme = root / "README.md"
-readme.write_text(re.sub(r"https://github\.com/[A-Za-z0-9<>-]+/omarchy-remote-seat\.git",
-                         f"https://github.com/{handle}/omarchy-remote-seat.git",
+readme.write_text(re.sub(r"https://github\.com/[A-Za-z0-9<>-]+/omarchy-super-button\.git",
+                         f"https://github.com/{handle}/omarchy-super-button.git",
                          readme.read_text()))
 
 # Fail loudly rather than ship a half-stamped tree.

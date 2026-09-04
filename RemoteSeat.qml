@@ -18,7 +18,7 @@ import qs.Commons
 // reachable with Super dropped. See engine/remote-seat.lua.
 BarWidget {
   id: root
-  moduleName: "io.github.knivfjell.remote-seat"
+  moduleName: "io.github.knivfjell.super-button"
 
   // --- tunables, set per-widget in shell.json -------------------------------
   // holdMs      how long one click keeps Super engaged before releasing
