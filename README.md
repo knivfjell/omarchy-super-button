@@ -326,6 +326,20 @@ Moving it to the scratchpad special workspace is the honest equivalent, and is w
 Omarchy binds itself. A window sent there is not gone, it is elsewhere — `▪` brings
 the drawer back, and `kseat scratch` lists what is in it without showing it.
 
+**The drawer is a workspace, and the trip back is one-way on the pad.** Open it with
+several windows inside and they all tile together at once — it is not a stack and there
+is no picker, so past three or four items each one is small. There is no button here for
+the return trip: the pad can send a window to the drawer but cannot send it back to a
+numbered workspace.
+
+To restore one: `▪` to open the drawer, click the window you want, then
+`SUPER + SHIFT + <n>` — which on a seat like this means click `SUPER`, click `+SHIFT`,
+press the number. Relative workspace tokens do not work from a special workspace, so the
+destination has to be a number; that is why there is no single "restore" control. Two
+further constraints make one hard to build honestly: a scratchpad window cannot be
+focused at all while the drawer is closed, and focusing a *specific* one by address is
+unreliable even when it is open.
+
 Choose which appear, and their size, with `windowControls`, `iconWidth` and
 `iconHeight` in `remote-seat.json`. An empty `windowControls` removes the strip and
 the pad returns to a single row.
