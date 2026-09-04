@@ -232,18 +232,38 @@ function M.capture()
     return nil
   end
 
+  -- Clear the whole config namespace, not just the modules about to be
+  -- required. Someone who splits their bindings across files and require()s
+  -- them from bindings.lua would otherwise have those files skipped: they are
+  -- already in package.loaded, so re-requiring the parent re-runs the parent
+  -- and nothing else, and their bindings would silently never be mirrored.
+  --
+  -- Everything is put back exactly as it was afterwards, so nothing downstream
+  -- ever sees a module that ran under stubs.
+  local snapshot = {}
+  for name in pairs(package.loaded) do
+    if name:match("^hypr%.") or name:match("^default%.hypr%.bindings") then
+      snapshot[name] = package.loaded[name]
+    end
+  end
+  for name in pairs(snapshot) do
+    package.loaded[name] = nil
+  end
+
   for _, name in ipairs(binding_modules()) do
-    -- Restore package.loaded afterwards so nothing downstream ever sees the
-    -- copy that ran under stubs, and so a later require re-runs for real.
-    local previous = package.loaded[name]
+    if snapshot[name] == nil then
+      snapshot[name] = package.loaded[name]
+    end
     package.loaded[name] = nil
 
     local ok, err = pcall(require, name)
     if not ok then
       M.capture_errors[#M.capture_errors + 1] = name .. ": " .. tostring(err)
     end
+  end
 
-    package.loaded[name] = previous
+  for name, module in pairs(snapshot) do
+    package.loaded[name] = module
   end
 
   hl.bind = real_bind

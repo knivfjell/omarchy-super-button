@@ -440,6 +440,12 @@ the right letter, because it resolves the keycode against wtype's uploaded
 keymap, which makes the tool look like it works. It cannot stand in for a real
 key press here any more than it can for a real Super press (see §4).
 
+### Multiple monitors
+
+The bar button appears on every bar. The pad is a single floating surface and
+appears on one output, so on a multi-head setup put it where you work, or drive
+the seat from the bar button and the leader keys instead.
+
 ### Still unreachable
 
 `Ctrl+Alt+Del` and `Win+L` are consumed on the controlling machine below every

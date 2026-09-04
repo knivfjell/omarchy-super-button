@@ -21,7 +21,16 @@ Item {
   id: installer
 
   readonly property string enginePath: Qt.resolvedUrl("engine/remote-seat.lua").toString().replace("file://", "")
-  readonly property string dropInDir: Quickshell.env("HOME") + "/.local/state/omarchy/toggles/hypr"
+  // Must match Omarchy's own rule exactly, from default/hypr/paths.lua: honour
+  // XDG_STATE_HOME, and treat it as unset when it is set but empty, per the XDG
+  // spec. Get this wrong on a machine that sets it and the engine is written
+  // somewhere Hyprland never looks — with no error, and nothing working.
+  readonly property string stateHome: {
+    var xdg = Quickshell.env("XDG_STATE_HOME")
+    if (xdg === undefined || xdg === null || String(xdg) === "") return Quickshell.env("HOME") + "/.local/state"
+    return String(xdg)
+  }
+  readonly property string dropInDir: stateHome + "/omarchy/toggles/hypr"
 
   function shellQuote(s) { return "'" + String(s).replace(/'/g, "'\\''") + "'" }
 
