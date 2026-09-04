@@ -34,9 +34,15 @@ behaves the same as a native one, which is the point.
 ## Install
 
     omarchy plugin add https://github.com/knivfjell/omarchy-remote-seat.git --enable
+    omarchy bar put io.github.knivfjell.remote-seat --after omarchy.menu
 
-That is the whole installation. There is no second step and no file of yours to
-edit.
+The second line puts the button on the bar, and is where you choose it to sit —
+`omarchy bar put --help` covers the placement flags. Nothing of yours is edited
+either way: no `hyprland.lua`, no config to patch, no script to run.
+
+The floating pad comes with the button rather than as a separate thing to
+enable, so there is no half-installed state where one works and the other
+silently does not.
 
 ## Uninstall
 

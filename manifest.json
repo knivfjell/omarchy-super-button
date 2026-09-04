@@ -6,19 +6,16 @@
   "author": "knivfjell",
   "description": "Drive Hyprland from a remote desktop that swallows Super. A clickable modifier button and floating pad, plus a leader layer mirroring every Super binding.",
   "kinds": [
-    "bar-widget",
-    "panel"
+    "bar-widget"
   ],
   "keepLoaded": true,
   "entryPoints": {
-    "barWidget": "RemoteSeat.qml",
-    "panel": "RemoteSeatPad.qml"
+    "barWidget": "RemoteSeat.qml"
   },
   "barWidget": {
     "displayName": "Remote seat",
     "description": "Click Super instead of pressing it, for sessions reached through a remote desktop connector.",
     "category": "Compositor",
-    "allowMultiple": false,
-    "defaultSection": "left"
+    "allowMultiple": false
   }
 }

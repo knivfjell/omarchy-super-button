@@ -41,39 +41,13 @@ BarWidget {
     if (root.bar) root.bar.run("hyprctl eval " + Util.shellQuote(code))
   }
 
-  // --- the engine ------------------------------------------------------------
-  //
-  // The mirrors and submaps are built by a Lua file that has to run inside
-  // Hyprland's config, which a QML plugin cannot do from here. So the plugin
-  // ships that file and drops it into ~/.local/state/omarchy/toggles/hypr —
-  // a directory Omarchy itself require()s on every config load, after all
-  // bindings are registered. Nothing in ~/.config/hypr is written or patched.
-  //
-  // The copy is a plain file copy of a static, shipped file. Nothing is
-  // generated, interpolated or fetched, which is the only version of "a plugin
-  // installs executable Lua" that is reviewable.
-  //
-  // `cmp` first, so a shell restart re-runs this and does nothing.
-  //
-  // Content is not the whole story though. Remove the plugin and add it back
-  // and the engine file is byte-identical, so nothing would be copied — but the
-  // running config was loaded while the plugin was absent, so the engine
-  // orphaned itself and is sitting there inert. Reload when the engine is not
-  // actually live, not merely when its bytes changed.
-  readonly property string enginePath: Qt.resolvedUrl("engine/remote-seat.lua").toString().replace("file://", "")
-  readonly property string dropInDir: Quickshell.env("HOME") + "/.local/state/omarchy/toggles/hypr"
+  Loader { source: Qt.resolvedUrl("EngineInstaller.qml") }
 
-  Process { id: engineProc }
-
-  Component.onCompleted: {
-    engineProc.exec(["sh", "-c",
-      "set -e; mkdir -p " + Util.shellQuote(root.dropInDir) + "; " +
-      "src=" + Util.shellQuote(root.enginePath) + "; " +
-      "dst=" + Util.shellQuote(root.dropInDir + "/remote-seat.lua") + "; " +
-      "changed=0; cmp -s \"$src\" \"$dst\" || { install -m 644 \"$src\" \"$dst\"; changed=1; }; " +
-      "live=$(hyprctl repl 'local M = package.loaded[\"remote-seat\"] return (M and not M.orphaned) and \"yes\" or \"no\"' 2>/dev/null | tail -1); " +
-      "if [ \"$changed\" = 1 ] || [ \"$live\" != yes ]; then hyprctl reload >/dev/null; fi"])
-  }
+  // The floating pad lives inside the widget rather than as a second
+  // plugin kind. Two kinds means two enablements — the bar layout for
+  // the widget, shell.json "plugins" for the panel — and a half-enabled
+  // install where the button works and the pad silently does not.
+  Loader { source: Qt.resolvedUrl("RemoteSeatPad.qml") }
 
   // The floating pad can be closed from its own ✕. This button is how it comes
   // back, so it needs to see and set the pad's enabled flag.
