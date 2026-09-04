@@ -308,10 +308,17 @@ trap below).
 | `□` | maximise | `SUPER + ALT + F` |
 | `✕` | close the window | `SUPER + W` |
 
-They are icons rather than labelled buttons on purpose: these are one-shot actions
-rather than modifiers you compose, and at modifier width each one would add another
-60px to the pad. `⌄` at the far right hides the pad itself — a chevron, not a second
-`✕`, so it cannot be mistaken for closing the window.
+They sit on their own strip **below** the modifiers, not beside them. Two reasons:
+these are one-shot actions rather than things you compose, and a control added to the
+modifier row costs the pad another 60px of width. On the strip they only add height —
+the pad stays 358px wide with four controls, the same width it had with none.
+
+Hover any of them for a label. They are deliberately small and unlabelled, which is
+only tolerable if hovering says what they do; the label renders outside the pad's
+input region, so it never swallows a click.
+
+`⌄` at the top right hides the pad itself — a chevron, not a second `✕`, so it cannot
+be mistaken for closing the window.
 
 **`–` is not minimise.** Hyprland has no minimise: its window verbs are close,
 fullscreen, float, pin, move, resize and friends, and none of them hide a window.
@@ -319,8 +326,9 @@ Moving it to the scratchpad special workspace is the honest equivalent, and is w
 Omarchy binds itself. A window sent there is not gone, it is elsewhere — `▪` brings
 the drawer back, and `kseat scratch` lists what is in it without showing it.
 
-Choose which appear, and their size, with `windowControls` and `iconWidth` in
-`remote-seat.json`.
+Choose which appear, and their size, with `windowControls`, `iconWidth` and
+`iconHeight` in `remote-seat.json`. An empty `windowControls` removes the strip and
+the pad returns to a single row.
 
 ### Placing and sizing it
 

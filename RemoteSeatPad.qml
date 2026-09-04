@@ -70,6 +70,20 @@ Item {
   // Icons, not buttons. These are one-shot actions, not modifiers you compose,
   // and at modifier width every one added grows the pad by another 60px.
   readonly property int iconW: opt("iconWidth", 26)
+  readonly property int iconH: opt("iconHeight", 22)
+
+  // What the hover label is currently showing. The icons are deliberately
+  // small and unlabelled, which is only tolerable if hovering says what they do.
+  property string hint: ""
+
+  readonly property var winHint: ({
+    "SHOW": "Scratchpad drawer",
+    "MIN":  "Send to scratchpad",
+    "MAX":  "Maximise window",
+    "CLOSE": "Close window",
+    "FULL": "Fullscreen window",
+    "FLOAT": "Float window"
+  })
 
   // Live position. Seeded from the file, moved by dragging, written back on
   // release so the placement survives a restart.
@@ -233,8 +247,31 @@ Item {
 
     // Span the screen so the pad can be placed at any coordinate...
     anchors { top: true; bottom: true; left: true; right: true }
-    // ...but only the pad itself swallows pointer events.
+    // ...but only the pad itself swallows pointer events. The hover label is
+    // deliberately outside that region: it renders, and clicks pass through it.
     mask: Region { item: pad }
+
+    Rectangle {
+      id: tip
+      visible: root.hint !== ""
+      // Above the pad, unless the pad is near the top, in which case below.
+      x: Math.max(0, Math.min(pad.x, win.width - width))
+      y: pad.y > height + 8 ? pad.y - height - 6 : pad.y + pad.height + 6
+      width: tipText.implicitWidth + 16
+      height: tipText.implicitHeight + 10
+      radius: 4
+      color: Color.foreground
+      opacity: 0.95
+
+      Text {
+        id: tipText
+        anchors.centerIn: parent
+        text: root.hint
+        color: Color.background
+        font.family: Style.font.family
+        font.pixelSize: root.fontSize
+      }
+    }
 
     Rectangle {
       id: pad
@@ -248,13 +285,22 @@ Item {
       border.width: 1
       border.color: Color.muted
 
+      // Two groups, stacked. The modifiers set the pad's width; the window
+      // controls sit under them in a shorter strip rather than extending the
+      // row, which is what made the pad grow by 60px for every control added.
       Grid {
         id: layout
         anchors.centerIn: parent
-        columns: root.vertical ? 1 : root.keys.length + 3 + (root.showWin ? root.winKeys.length + 1 : 0)
-
+        rows: root.vertical ? 1 : 2
+        columns: root.vertical ? 2 : 1
         spacing: root.spacing
         padding: root.spacing
+
+      Grid {
+        id: primary
+        rows: root.vertical ? root.keys.length + 3 : 1
+        columns: root.vertical ? 1 : root.keys.length + 3
+        spacing: root.spacing
 
         // Drag handle. The pad has no titlebar, and dragging from a button
         // would fight the click, so moving it gets its own grip.
@@ -313,7 +359,11 @@ Item {
 
           MouseArea {
             anchors.fill: parent
+            hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
+            onEntered: root.hint = root.appMode ? "APP — send chords to the focused window"
+                                                : "WM — compose Hyprland bindings"
+            onExited: root.hint = ""
             onClicked: root.setMode(root.appMode ? "wm" : "app")
           }
         }
@@ -354,15 +404,47 @@ Item {
         }
 
 
-        // A divider, because the modifiers compose a chord and these do a thing
-        // immediately. Same pad, two different kinds of control.
+        // Hide the pad itself. Last, and a chevron rather than an ✕, so it does
+        // not read as a second "close the window" beside the one that is.
+        // Bring it back with the pip beside the SUPER button on the bar.
         Rectangle {
-          visible: root.showWin
-          width: root.vertical ? root.btnW : 1
-          height: root.vertical ? 1 : root.btnH
-          color: Color.muted
-          opacity: 0.45
+          width: root.vertical ? root.btnW : 20
+          height: root.vertical ? 20 : root.btnH
+          radius: 3
+          color: shut.containsMouse ? Color.urgent : "transparent"
+
+          Text {
+            anchors.centerIn: parent
+            text: "\u2304"
+            color: shut.containsMouse ? Color.background : Color.muted
+            font.pixelSize: root.fontSize + 2
+          }
+
+          MouseArea {
+            id: shut
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onEntered: root.hint = "Hide this pad"
+            onExited: root.hint = ""
+            onClicked: root.save({ enabled: false })
+          }
         }
+      }
+
+      // The icon strip. Sized to the modifier row so it can be centred under
+      // it, and it never widens the pad: if it outgrows the row the pad grows,
+      // which is the situation this layout exists to avoid.
+      Item {
+        visible: root.showWin
+        width: root.vertical ? root.iconW : primary.width
+        height: root.vertical ? primary.height : root.iconH
+
+        Grid {
+          anchors.centerIn: parent
+          rows: root.vertical ? root.winKeys.length : 1
+          columns: root.vertical ? 1 : root.winKeys.length
+          spacing: root.spacing - 1
 
         Repeater {
           model: root.showWin ? root.winKeys : []
@@ -372,7 +454,7 @@ Item {
             required property var modelData
 
             width: root.vertical ? root.btnW : root.iconW
-            height: root.btnH
+            height: root.vertical ? root.iconH : root.iconH
             radius: 3
             color: winArea.pressed ? Color.urgent
                                    : (winArea.containsMouse ? Color.muted : "transparent")
@@ -395,35 +477,15 @@ Item {
               // Left button only. The others never arrive over a browser client.
               acceptedButtons: Qt.LeftButton
               cursorShape: Qt.PointingHandCursor
+              onEntered: root.hint = root.winHint[winKey.modelData] || winKey.modelData
+              onExited: root.hint = ""
               onClicked: root.winPress(winKey.modelData)
             }
           }
         }
-
-        // Hide the pad itself. Last, and a chevron rather than an ✕, so it does
-        // not read as a second "close the window" beside the one that is.
-        // Bring it back with the pip beside the SUPER button on the bar.
-        Rectangle {
-          width: root.vertical ? root.btnW : 20
-          height: root.vertical ? 20 : root.btnH
-          radius: 3
-          color: shut.containsMouse ? Color.urgent : "transparent"
-
-          Text {
-            anchors.centerIn: parent
-            text: "\u2304"
-            color: shut.containsMouse ? Color.background : Color.muted
-            font.pixelSize: root.fontSize + 2
-          }
-
-          MouseArea {
-            id: shut
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.save({ enabled: false })
-          }
         }
+      }
+
       }
     }
   }
