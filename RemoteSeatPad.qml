@@ -121,7 +121,12 @@ Item {
 
   function winPress(name) {
     var action = root.winAction[name]
-    if (action) lua(action)
+    // hl.dsp.* only BUILDS a dispatcher; evaluating one does nothing at all.
+    // The modifier buttons get away with plain eval because they call module
+    // functions that dispatch internally. These are raw dispatchers, so they
+    // have to be handed to hl.dispatch or the click is a silent no-op —
+    // measured: bare eval left fullscreen=0, wrapped set it to 1.
+    if (action) lua("hl.dispatch(" + action + ")")
   }
 
   function press(name, button) {
