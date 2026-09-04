@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.knivfjell.super-button",
   "name": "Super Button",
-  "version": "1.0.0",
+  "version": "1.1.0-winctl",
   "author": "knivfjell",
   "description": "A clickable Super key for headless, VM and remote seats. Remote desktop clients swallow the Super key, so every Hyprland keybinding dies with it. Click Super instead of pressing it, or send real chords to the focused window.",
   "kinds": [

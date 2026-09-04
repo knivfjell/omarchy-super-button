@@ -54,6 +54,20 @@ Item {
   readonly property int holdMs: Math.max(250, opt("holdMs", 4000))
   readonly property var keys: opt("keys", ["SUPER", "CTRL", "ALT", "SHIFT"])
 
+  // Window controls act on the focused window. They are left-click only, and
+  // that is the whole point: measured on a browser-based client, buttons 2 and
+  // 3 never reach the compositor at all — the client keeps them for its context
+  // menu and its paste. Omarchy's own active-window widget closes on right- or
+  // middle-click and is therefore dead on such a seat. Left-click is the one
+  // pointer event that always arrives.
+  //
+  // MIN is not minimise. Hyprland has no minimise: the window dispatchers are
+  // close, fullscreen, float, pin, move, resize and friends, and none of them
+  // hide a window. Moving it to the scratchpad special workspace is the honest
+  // equivalent, and is what Omarchy binds itself.
+  readonly property var winKeys: opt("windowControls", ["CLOSE", "MAX", "MIN"])
+  readonly property bool showWin: winKeys.length > 0
+
   // Live position. Seeded from the file, moved by dragging, written back on
   // release so the placement survives a restart.
   property int posX: 0
@@ -93,6 +107,22 @@ Item {
   }
 
   function lua(code) { luaProc.exec(["hyprctl", "eval", code]) }
+
+  // Taken verbatim from Omarchy's own bindings (SUPER+W, SUPER+ALT+F, SUPER+ALT+S,
+  // SUPER+S, SUPER+T) so a click does exactly what the keybinding does.
+  readonly property var winAction: ({
+    "CLOSE": 'hl.dsp.window.close()',
+    "MAX":   'hl.dsp.window.fullscreen({ mode = "maximized" })',
+    "FULL":  'hl.dsp.window.fullscreen({ mode = "fullscreen" })',
+    "MIN":   'hl.dsp.window.move({ follow = false, workspace = "special:scratchpad" })',
+    "SHOW":  'hl.dsp.workspace.toggle_special("scratchpad")',
+    "FLOAT": 'hl.dsp.window.float({ action = "toggle" })'
+  })
+
+  function winPress(name) {
+    var action = root.winAction[name]
+    if (action) lua(action)
+  }
 
   function press(name, button) {
     if (appMode) {
@@ -208,7 +238,7 @@ Item {
       Grid {
         id: layout
         anchors.centerIn: parent
-        columns: root.vertical ? 1 : root.keys.length + 3
+        columns: root.vertical ? 1 : root.keys.length + 3 + (root.showWin ? root.winKeys.length + 1 : 0)
         spacing: root.spacing
         padding: root.spacing
 
@@ -330,6 +360,53 @@ Item {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: root.save({ enabled: false })
+          }
+        }
+
+        // A divider, because the modifiers compose a chord and these do a thing
+        // immediately. Same pad, two different kinds of control.
+        Rectangle {
+          visible: root.showWin
+          width: root.vertical ? root.btnW : 1
+          height: root.vertical ? 1 : root.btnH
+          color: Color.muted
+          opacity: 0.45
+        }
+
+        Repeater {
+          model: root.showWin ? root.winKeys : []
+
+          Rectangle {
+            id: winKey
+            required property var modelData
+
+            width: root.btnW
+            height: root.btnH
+            radius: root.radius
+            color: winArea.pressed ? Color.urgent : Color.background
+            border.width: 1
+            border.color: winArea.containsMouse ? Color.foreground : Color.muted
+
+            Behavior on color { ColorAnimation { duration: 110 } }
+
+            Text {
+              anchors.centerIn: parent
+              text: winKey.modelData
+              color: winArea.pressed ? Color.background : Color.foreground
+              font.family: Style.font.family
+              font.pixelSize: root.fontSize
+              font.weight: Font.Medium
+            }
+
+            MouseArea {
+              id: winArea
+              anchors.fill: parent
+              hoverEnabled: true
+              // Left button only. The others never arrive over a browser client.
+              acceptedButtons: Qt.LeftButton
+              cursorShape: Qt.PointingHandCursor
+              onClicked: root.winPress(winKey.modelData)
+            }
           }
         }
       }
