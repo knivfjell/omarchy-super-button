@@ -1,11 +1,14 @@
 {
   "schemaVersion": 1,
-  "id": "knivriver.remote-seat",
+  "id": "io.github.knivfjell.remote-seat",
   "name": "Remote Seat",
   "version": "1.0.0",
-  "author": "knivriver",
+  "author": "knivfjell",
   "description": "Drive Hyprland from a remote desktop that swallows Super. A clickable modifier button and floating pad, plus a leader layer mirroring every Super binding.",
-  "kinds": ["bar-widget", "panel"],
+  "kinds": [
+    "bar-widget",
+    "panel"
+  ],
   "keepLoaded": true,
   "entryPoints": {
     "barWidget": "RemoteSeat.qml",

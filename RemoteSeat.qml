@@ -10,14 +10,15 @@ import qs.Commons
 // Every remote desktop connector forwards mouse events faithfully; none of them
 // reliably forward Super, because the client's own OS claims it first. So the
 // modifier is offered as a pointer target rather than a key, which makes it
-// connector-agnostic by construction — Guacamole, noVNC, a native VNC client or
-// anything else over Tailscale all behave the same.
+// connector-agnostic by construction: a browser-based client, a native VNC or
+// RDP viewer and a tablet app all behave the same, because none of them are
+// asked for anything they cannot do.
 //
 // Clicking engages the "remote" submap, in which every Super binding is
-// reachable with Super dropped. See ~/.config/hypr/remote-seat.lua.
+// reachable with Super dropped. See engine/remote-seat.lua.
 BarWidget {
   id: root
-  moduleName: "knivriver.remote-seat"
+  moduleName: "io.github.knivfjell.remote-seat"
 
   // --- tunables, set per-widget in shell.json -------------------------------
   // holdMs      how long one click keeps Super engaged before releasing

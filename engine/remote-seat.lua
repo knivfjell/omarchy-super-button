@@ -10,9 +10,10 @@
 -- exist to be recovered, and the submaps can still be defined for this config
 -- generation. Nothing in ~/.config/hypr is touched.
 --
--- Why this exists: this VM is driven through PVE noVNC and Guacamole. Both run
--- inside a browser, and the browser's host OS claims the Super/Meta key before
--- the page ever sees it. Hyprland is fine; the key simply never arrives.
+-- Why this exists: when Omarchy is reached through a remote desktop connector,
+-- the client's own operating system claims the Super/Meta key before the
+-- session ever sees it. Hyprland is fine; the key simply never arrives, and
+-- nearly every Omarchy binding starts with it.
 --
 -- The fix is a leader layer: one connector-safe chord enters a Hyprland submap
 -- in which every Super binding is reachable with Super dropped. SUPER+W becomes
@@ -26,8 +27,9 @@ local M = {}
 
 M.config = {
   -- Several ways in, because connectors differ in what they swallow.
-  -- Ctrl+Alt+Space is unused by Omarchy and clear of Guacamole's
-  -- Ctrl+Alt+Shift menu chord. Menu and Pause need no modifier at all, which
+  -- Ctrl+Alt+Space is unused by Omarchy and clear of the Ctrl+Alt+Shift chord
+  -- some clients reserve for their own menu. Menu and Pause need no modifier at
+  -- all, which
   -- matters if a connector mangles modifier state rather than dropping keys.
   leaders    = { "CTRL + ALT + SPACE", "MENU", "PAUSE" },
   submap     = "remote",
@@ -789,7 +791,7 @@ end
 -- through it can. wtype and other virtual-keyboard tools report modmask 0, so
 -- they cannot stand in for a real Super press. This taps Hyprland's own key
 -- events and records what actually arrived, which is the only trustworthy
--- answer to "does Super reach the VM over Guacamole?".
+-- answer to "does Super actually reach this session?".
 --
 -- Off by default: the callback runs on every keystroke.
 -- ---------------------------------------------------------------------------
@@ -866,7 +868,7 @@ end
 -- inert and can be deleted whenever it is noticed.
 local function owner_installed()
   local home = os.getenv("HOME") or ""
-  local manifest = home .. "/.config/omarchy/plugins/knivriver.remote-seat/manifest.json"
+  local manifest = home .. "/.config/omarchy/plugins/io.github.knivfjell.remote-seat/manifest.json"
   local handle = io.open(manifest, "r")
 
   if handle then

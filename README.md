@@ -33,14 +33,14 @@ behaves the same as a native one, which is the point.
 
 ## Install
 
-    omarchy plugin add https://github.com/<you>/omarchy-remote-seat.git --enable
+    omarchy plugin add https://github.com/knivfjell/omarchy-remote-seat.git --enable
 
 That is the whole installation. There is no second step and no file of yours to
 edit.
 
 ## Uninstall
 
-    omarchy plugin remove knivriver.remote-seat
+    omarchy plugin remove io.github.knivfjell.remote-seat
     rm ~/.local/state/omarchy/toggles/hypr/remote-seat.lua
 
 The second line is tidiness, not a requirement: the engine checks on every load
@@ -184,7 +184,7 @@ button never takes keyboard focus away from the window you are working in.
 It lives in `~/.config/omarchy/shell.json` on the widget's layout entry, which
 hot-reloads on save:
 
-    { "id": "knivriver.remote-seat", "holdMs": 4000, "label": "SUPER",
+    { "id": "io.github.knivfjell.remote-seat", "holdMs": 4000, "label": "SUPER",
       "countdown": true, "lockEnabled": true }
 
 | Setting | Meaning |
@@ -307,7 +307,7 @@ The pad clamps itself inside the screen, so an off-screen coordinate is pulled
 back rather than losing the pad.
 
 Enable or remove the whole thing with
-`omarchy plugin enable|disable knivriver.remote-seat` — third-party plugins are
+`omarchy plugin enable|disable io.github.knivfjell.remote-seat` — third-party plugins are
 opt-in, unlike first-party ones.
 
 ## 7. App mode — real chords into the focused window

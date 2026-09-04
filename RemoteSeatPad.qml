@@ -177,7 +177,7 @@ Item {
     visible: root.enabled
     color: "transparent"
 
-    WlrLayershell.namespace: "knivriver-remote-seat-pad"
+    WlrLayershell.namespace: "remote-seat-pad"
     WlrLayershell.layer: WlrLayer.Overlay
     // Never take keyboard focus: the key you press next must still reach the
     // window you were working in.

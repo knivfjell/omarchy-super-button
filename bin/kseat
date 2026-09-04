@@ -264,7 +264,7 @@ p = pathlib.Path.home() / ".config/omarchy/shell.json"
 cfg = json.loads(p.read_text())
 layout = cfg["bar"]["layout"]
 entry = next((w for sec in ("left", "center", "right")
-              for w in layout.get(sec, []) if w.get("id") == "io.github.example-user.remote-seat"), None)
+              for w in layout.get(sec, []) if w.get("id") == "io.github.knivfjell.remote-seat"), None)
 if entry is None:
     sys.exit("kseat: the Super button is not on the bar")
 

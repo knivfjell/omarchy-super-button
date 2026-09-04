@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 # Stamp the plugin's identity from a GitHub handle.
 #
-# The marketplace convention is io.github.<handle>.<name>, and the id appears in
-# more than the manifest: the engine checks for its own plugin directory by id
-# to know whether it has been orphaned, and the README's install line carries
-# the repo URL. One script so those cannot drift apart.
+# The marketplace convention is io.github.<handle>.<name>, and that id is load
+# bearing in more places than the manifest: the QML reads its settings from
+# shell.json by moduleName, the engine checks for its own plugin directory to
+# know whether it has been orphaned, and kseat finds the bar widget by id.
+# Every one of those is silent when wrong — a widget with no settings, an engine
+# that thinks it is uninstalled, a kseat that finds nothing. Two such bugs got
+# as far as a commit before this script covered them all.
+#
+# It rewrites any id it finds rather than one specific old string, so running it
+# twice, or after a partial edit, converges instead of drifting.
 set -euo pipefail
 
 [[ $# -eq 1 ]] || { echo "usage: ./set-identity.sh <github-handle>" >&2; exit 2; }
@@ -12,31 +18,44 @@ handle=$1
 [[ $handle =~ ^[A-Za-z0-9][A-Za-z0-9-]*$ ]] || { echo "not a GitHub handle: $handle" >&2; exit 2; }
 
 here=$(cd "$(dirname "$0")" && pwd)
-old=$(python3 -c "import json;print(json.load(open('$here/manifest.json'))['id'])")
-new="io.github.${handle,,}.remote-seat"
 
-if [[ $old == "$new" ]]; then echo "already $new"; exit 0; fi
+python3 - "$here" "$handle" <<'PY'
+import json, pathlib, re, sys
 
-python3 - "$here" "$old" "$new" "$handle" <<'PY'
-import json, pathlib, sys
-here, old, new, handle = sys.argv[1:5]
+here, handle = sys.argv[1], sys.argv[2]
 root = pathlib.Path(here)
+new = f"io.github.{handle.lower()}.remote-seat"
 
-m = json.loads((root / "manifest.json").read_text())
+# Any id this project has ever carried, in dotted or dashed form.
+ID = re.compile(r"(?:io\.github\.[A-Za-z0-9-]+|[A-Za-z0-9-]+)\.remote-seat")
+
+manifest = root / "manifest.json"
+m = json.loads(manifest.read_text())
+old = m["id"]
 m["id"] = new
 m["author"] = handle
-(root / "manifest.json").write_text(json.dumps(m, indent=2) + "\n")
+manifest.write_text(json.dumps(m, indent=2) + "\n")
 
-for rel in ("engine/remote-seat.lua", "README.md"):
+for rel in ("engine/remote-seat.lua", "RemoteSeat.qml", "bin/kseat", "README.md"):
     p = root / rel
-    p.write_text(p.read_text().replace(old, new))
+    p.write_text(ID.sub(new, p.read_text()))
 
 readme = root / "README.md"
-readme.write_text(readme.read_text().replace(
-    "https://github.com/<you>/omarchy-remote-seat.git",
-    f"https://github.com/{handle}/omarchy-remote-seat.git"))
-PY
+readme.write_text(re.sub(r"https://github\.com/[A-Za-z0-9<>-]+/omarchy-remote-seat\.git",
+                         f"https://github.com/{handle}/omarchy-remote-seat.git",
+                         readme.read_text()))
 
-echo "id:     $old -> $new"
-echo "author: $handle"
-grep -c "$new" "$here/engine/remote-seat.lua" | sed 's/^/engine references updated: /'
+# Fail loudly rather than ship a half-stamped tree.
+stale = []
+for p in root.rglob("*"):
+    if not p.is_file() or ".git" in p.parts or p.suffix == ".png" or p.name == "set-identity.sh":
+        continue
+    for found in ID.findall(p.read_text(errors="ignore")):
+        if found != new:
+            stale.append(f"{p.relative_to(root)}: {found}")
+if stale:
+    sys.exit("set-identity: id left un-stamped:\n  " + "\n  ".join(stale))
+
+print(f"id:     {old} -> {new}")
+print(f"author: {handle}")
+PY
