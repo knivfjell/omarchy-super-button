@@ -34,15 +34,24 @@ behaves the same as a native one, which is the point.
 ## Install
 
     omarchy plugin add https://github.com/knivfjell/omarchy-remote-seat.git --enable
-    omarchy bar put io.github.knivfjell.remote-seat --after omarchy.menu
 
-The second line puts the button on the bar, and is where you choose it to sit —
-`omarchy bar put --help` covers the placement flags. Nothing of yours is edited
-either way: no `hyprland.lua`, no config to patch, no script to run.
+That installs the engine and the floating pad, and they work immediately. No
+`hyprland.lua` hook, no config of yours patched, no script to run.
 
-The floating pad comes with the button rather than as a separate thing to
-enable, so there is no half-installed state where one works and the other
-silently does not.
+Then put the **button** on the bar, which Omarchy leaves to you for any
+third-party widget. Either pick it from `omarchy menu plugin`, or add an entry
+to the `left` section of `bar.layout` in `~/.config/omarchy/shell.json`, which
+hot-reloads on save:
+
+    { "id": "io.github.knivfjell.remote-seat", "holdMs": 4000, "label": "SUPER",
+      "countdown": true, "lockEnabled": true }
+
+Note that `omarchy bar put <id>` prints "is on the bar" without placing a
+third-party widget on Omarchy 4.0.2 — it is not doing anything, whatever it
+says. Use the menu or the config entry above.
+
+The pad does not need the button: it is a separate plugin kind, enabled by the
+install line, and the button is how you re-open it after its ✕.
 
 ## Uninstall
 

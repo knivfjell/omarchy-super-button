@@ -134,6 +134,10 @@ Item {
 
   Process { id: luaProc }
 
+  // The engine is installed from here as well as from the bar widget. Either
+  // half can be enabled without the other, and the installer is idempotent.
+  Loader { source: Qt.resolvedUrl("EngineInstaller.qml") }
+
   // Persist geometry. Writing re-triggers the watcher, but the values then match
   // what is already loaded, so it settles rather than looping.
   function save(patch) {

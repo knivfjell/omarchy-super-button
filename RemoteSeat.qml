@@ -43,12 +43,6 @@ BarWidget {
 
   Loader { source: Qt.resolvedUrl("EngineInstaller.qml") }
 
-  // The floating pad lives inside the widget rather than as a second
-  // plugin kind. Two kinds means two enablements — the bar layout for
-  // the widget, shell.json "plugins" for the panel — and a half-enabled
-  // install where the button works and the pad silently does not.
-  Loader { source: Qt.resolvedUrl("RemoteSeatPad.qml") }
-
   // The floating pad can be closed from its own ✕. This button is how it comes
   // back, so it needs to see and set the pad's enabled flag.
   property bool padEnabled: true
