@@ -182,12 +182,18 @@ def pad_size():
     was wrong before: measured 358 wide against a computed 313.
     """
     n = len(cfg.get("keys", []))
+    w = len(cfg.get("windowControls", ["CLOSE", "MAX", "MIN"]))
     sp, bw, bh = cfg.get("spacing", 5), cfg.get("buttonWidth", 60), cfg.get("buttonHeight", 34)
-    grip, shut, mode = 16, 20, 40
-    gaps = sp * (n + 2)          # n modifiers + grip + mode + close = n+3 cells
+    grip, shut, mode, div = 16, 20, 40, 1
+
+    # Cells: grip, mode, n modifiers, close, then (divider + w controls) if any.
+    cells = n + 3 + (w + 1 if w else 0)
+    gaps = sp * (cells - 1)
+    extra = (div + w * bw) if w else 0
+
     if cfg.get("orientation") == "vertical":
-        return 2 * sp + bw + 2, 2 * sp + grip + bh + n * bh + shut + gaps + 2
-    return 2 * sp + grip + mode + n * bw + shut + gaps + 2, 2 * sp + bh + 2
+        return 2 * sp + bw + 2, 2 * sp + grip + bh + n * bh + shut + (div + w * bh if w else 0) + gaps + 2
+    return 2 * sp + grip + mode + n * bw + shut + extra + gaps + 2, 2 * sp + bh + 2
 
 
 def usable():
