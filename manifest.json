@@ -18,6 +18,7 @@
     "displayName": "Remote seat",
     "description": "Click Super instead of pressing it, for sessions reached through a remote desktop connector.",
     "category": "Compositor",
-    "allowMultiple": false
+    "allowMultiple": false,
+    "defaultSection": "left"
   }
 }

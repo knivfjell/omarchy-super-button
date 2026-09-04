@@ -53,8 +53,13 @@ BarWidget {
   // generated, interpolated or fetched, which is the only version of "a plugin
   // installs executable Lua" that is reviewable.
   //
-  // `cmp` first, so a shell restart re-runs this and does nothing: Hyprland is
-  // reloaded only when the engine actually changed.
+  // `cmp` first, so a shell restart re-runs this and does nothing.
+  //
+  // Content is not the whole story though. Remove the plugin and add it back
+  // and the engine file is byte-identical, so nothing would be copied — but the
+  // running config was loaded while the plugin was absent, so the engine
+  // orphaned itself and is sitting there inert. Reload when the engine is not
+  // actually live, not merely when its bytes changed.
   readonly property string enginePath: Qt.resolvedUrl("engine/remote-seat.lua").toString().replace("file://", "")
   readonly property string dropInDir: Quickshell.env("HOME") + "/.local/state/omarchy/toggles/hypr"
 
@@ -65,7 +70,9 @@ BarWidget {
       "set -e; mkdir -p " + Util.shellQuote(root.dropInDir) + "; " +
       "src=" + Util.shellQuote(root.enginePath) + "; " +
       "dst=" + Util.shellQuote(root.dropInDir + "/remote-seat.lua") + "; " +
-      "cmp -s \"$src\" \"$dst\" || { install -m 644 \"$src\" \"$dst\" && hyprctl reload >/dev/null; }"])
+      "changed=0; cmp -s \"$src\" \"$dst\" || { install -m 644 \"$src\" \"$dst\"; changed=1; }; " +
+      "live=$(hyprctl repl 'local M = package.loaded[\"remote-seat\"] return (M and not M.orphaned) and \"yes\" or \"no\"' 2>/dev/null | tail -1); " +
+      "if [ \"$changed\" = 1 ] || [ \"$live\" != yes ]; then hyprctl reload >/dev/null; fi"])
   }
 
   // The floating pad can be closed from its own ✕. This button is how it comes
