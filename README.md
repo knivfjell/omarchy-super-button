@@ -295,6 +295,33 @@ State comes from the submap name rather than being tracked locally, so the pad
 stays correct when the layer is driven from a leader key, from `kseat`, or by
 its own timeout expiring.
 
+### Window controls
+
+The icons after the divider act on the **focused window**, and are left-click only
+because right- and middle-click are not delivered by a browser-based client (see the
+trap below).
+
+| Icon | Does | Same as |
+|---|---|---|
+| `▪` | show/hide the scratchpad drawer | `SUPER + S` |
+| `–` | send the window to the scratchpad | `SUPER + ALT + S` |
+| `□` | maximise | `SUPER + ALT + F` |
+| `✕` | close the window | `SUPER + W` |
+
+They are icons rather than labelled buttons on purpose: these are one-shot actions
+rather than modifiers you compose, and at modifier width each one would add another
+60px to the pad. `⌄` at the far right hides the pad itself — a chevron, not a second
+`✕`, so it cannot be mistaken for closing the window.
+
+**`–` is not minimise.** Hyprland has no minimise: its window verbs are close,
+fullscreen, float, pin, move, resize and friends, and none of them hide a window.
+Moving it to the scratchpad special workspace is the honest equivalent, and is what
+Omarchy binds itself. A window sent there is not gone, it is elsewhere — `▪` brings
+the drawer back, and `kseat scratch` lists what is in it without showing it.
+
+Choose which appear, and their size, with `windowControls` and `iconWidth` in
+`remote-seat.json`.
+
 ### Placing and sizing it
 
     kseat pad                        # everything, plus the computed size

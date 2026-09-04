@@ -43,6 +43,7 @@ kseat — remote-seat control for Omarchy/Hyprland
   kseat menu                Open the Omarchy menu (works with no keyboard)
   kseat run '<lua>'         Dispatch any Hyprland action, e.g.
                               kseat run 'hl.dsp.window.close()'
+  kseat scratch [list]      What is on the scratchpad; show/hide the drawer
   kseat send <mods> <key>   Send a real chord to the focused window, e.g.
                               kseat send ctrl+shift t
                               kseat send '' F11     (no modifier)
@@ -146,6 +147,21 @@ case "${1:-status}" in
   run)
     [[ $# -ge 2 ]] || { echo "usage: kseat run '<lua dispatcher>'" >&2; exit 2; }
     hyprctl dispatch "$2" ;;
+  scratch)
+    # The scratchpad is a special workspace, so a window moved there is not
+    # minimised — it is elsewhere, and invisible until the drawer is shown.
+    case "${2:-list}" in
+      list)
+        echo "scratchpad"
+        printf "  shown        %s\n" "$(hyprctl monitors -j | jq -r '[.[]|select(.specialWorkspace.name=="special:scratchpad")]|length>0')"
+        n=$(hyprctl clients -j | jq '[.[]|select(.workspace.name=="special:scratchpad")]|length')
+        printf "  windows      %s\n" "$n"
+        [ "$n" -gt 0 ] && hyprctl clients -j | jq -r '.[]|select(.workspace.name=="special:scratchpad")|"    \(.class)  \(.title)"'
+        ;;
+      show|on)  lua 'hl.dispatch(hl.dsp.workspace.toggle_special("scratchpad"))'; echo "  toggled" ;;
+      hide|off) lua 'hl.dispatch(hl.dsp.workspace.toggle_special("scratchpad"))'; echo "  toggled" ;;
+      *) echo "usage: kseat scratch [list|show|hide]" >&2; exit 2 ;;
+    esac ;;
   send)
     # Out-of-band chord injection. Same path the pad uses, so this also answers
     # "is app mode wired up?" without needing a keyboard the connector respects.
@@ -182,17 +198,20 @@ def pad_size():
     was wrong before: measured 358 wide against a computed 313.
     """
     n = len(cfg.get("keys", []))
-    w = len(cfg.get("windowControls", ["CLOSE", "MAX", "MIN"]))
-    sp, bw, bh = cfg.get("spacing", 5), cfg.get("buttonWidth", 60), cfg.get("buttonHeight", 34)
+    w = len(cfg.get("windowControls", ["SHOW", "MIN", "MAX", "CLOSE"]))
+    sp = cfg.get("spacing", 5)
+    bw, bh = cfg.get("buttonWidth", 60), cfg.get("buttonHeight", 34)
+    iw = cfg.get("iconWidth", 26)
     grip, shut, mode, div = 16, 20, 40, 1
 
-    # Cells: grip, mode, n modifiers, close, then (divider + w controls) if any.
+    # Cells: grip, mode, n modifiers, then (divider + w icons) if any, then hide.
     cells = n + 3 + (w + 1 if w else 0)
     gaps = sp * (cells - 1)
-    extra = (div + w * bw) if w else 0
 
     if cfg.get("orientation") == "vertical":
-        return 2 * sp + bw + 2, 2 * sp + grip + bh + n * bh + shut + (div + w * bh if w else 0) + gaps + 2
+        extra = (div + w * bh) if w else 0
+        return 2 * sp + bw + 2, 2 * sp + grip + bh + n * bh + shut + extra + gaps + 2
+    extra = (div + w * iw) if w else 0
     return 2 * sp + grip + mode + n * bw + shut + extra + gaps + 2, 2 * sp + bh + 2
 
 

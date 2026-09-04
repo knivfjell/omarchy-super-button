@@ -65,8 +65,11 @@ Item {
   // close, fullscreen, float, pin, move, resize and friends, and none of them
   // hide a window. Moving it to the scratchpad special workspace is the honest
   // equivalent, and is what Omarchy binds itself.
-  readonly property var winKeys: opt("windowControls", ["CLOSE", "MAX", "MIN"])
+  readonly property var winKeys: opt("windowControls", ["SHOW", "MIN", "MAX", "CLOSE"])
   readonly property bool showWin: winKeys.length > 0
+  // Icons, not buttons. These are one-shot actions, not modifiers you compose,
+  // and at modifier width every one added grows the pad by another 60px.
+  readonly property int iconW: opt("iconWidth", 26)
 
   // Live position. Seeded from the file, moved by dragging, written back on
   // release so the placement survives a restart.
@@ -115,8 +118,13 @@ Item {
     "MAX":   'hl.dsp.window.fullscreen({ mode = "maximized" })',
     "FULL":  'hl.dsp.window.fullscreen({ mode = "fullscreen" })',
     "MIN":   'hl.dsp.window.move({ follow = false, workspace = "special:scratchpad" })',
-    "SHOW":  'hl.dsp.workspace.toggle_special("scratchpad")',
+    "SHOW":  'hl.dsp.workspace.toggle_special("scratchpad")',   // the drawer MIN puts things in
     "FLOAT": 'hl.dsp.window.float({ action = "toggle" })'
+  })
+
+  readonly property var winGlyph: ({
+    "SHOW": "\u25aa", "MIN": "\u2013", "MAX": "\u25a1", "CLOSE": "\u2715",
+    "FULL": "\u25a0", "FLOAT": "\u25ab"
   })
 
   function winPress(name) {
@@ -244,6 +252,7 @@ Item {
         id: layout
         anchors.centerIn: parent
         columns: root.vertical ? 1 : root.keys.length + 3 + (root.showWin ? root.winKeys.length + 1 : 0)
+
         spacing: root.spacing
         padding: root.spacing
 
@@ -344,29 +353,6 @@ Item {
           }
         }
 
-        // Close. Reopen from the SUPER button on the bar (middle-click),
-        // or with `kseat pad enabled true`.
-        Rectangle {
-          width: root.vertical ? root.btnW : 20
-          height: root.vertical ? 20 : root.btnH
-          radius: 3
-          color: shut.containsMouse ? Color.urgent : "transparent"
-
-          Text {
-            anchors.centerIn: parent
-            text: "✕"
-            color: shut.containsMouse ? Color.background : Color.muted
-            font.pixelSize: root.fontSize
-          }
-
-          MouseArea {
-            id: shut
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.save({ enabled: false })
-          }
-        }
 
         // A divider, because the modifiers compose a chord and these do a thing
         // immediately. Same pad, two different kinds of control.
@@ -385,21 +371,20 @@ Item {
             id: winKey
             required property var modelData
 
-            width: root.btnW
+            width: root.vertical ? root.btnW : root.iconW
             height: root.btnH
-            radius: root.radius
-            color: winArea.pressed ? Color.urgent : Color.background
-            border.width: 1
-            border.color: winArea.containsMouse ? Color.foreground : Color.muted
+            radius: 3
+            color: winArea.pressed ? Color.urgent
+                                   : (winArea.containsMouse ? Color.muted : "transparent")
 
             Behavior on color { ColorAnimation { duration: 110 } }
 
             Text {
               anchors.centerIn: parent
-              text: winKey.modelData
+              text: root.winGlyph[winKey.modelData] || winKey.modelData
               color: winArea.pressed ? Color.background : Color.foreground
               font.family: Style.font.family
-              font.pixelSize: root.fontSize
+              font.pixelSize: root.fontSize + 1
               font.weight: Font.Medium
             }
 
@@ -412,6 +397,31 @@ Item {
               cursorShape: Qt.PointingHandCursor
               onClicked: root.winPress(winKey.modelData)
             }
+          }
+        }
+
+        // Hide the pad itself. Last, and a chevron rather than an ✕, so it does
+        // not read as a second "close the window" beside the one that is.
+        // Bring it back with the pip beside the SUPER button on the bar.
+        Rectangle {
+          width: root.vertical ? root.btnW : 20
+          height: root.vertical ? 20 : root.btnH
+          radius: 3
+          color: shut.containsMouse ? Color.urgent : "transparent"
+
+          Text {
+            anchors.centerIn: parent
+            text: "\u2304"
+            color: shut.containsMouse ? Color.background : Color.muted
+            font.pixelSize: root.fontSize + 2
+          }
+
+          MouseArea {
+            id: shut
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.save({ enabled: false })
           }
         }
       }
