@@ -221,6 +221,14 @@ Item {
         console.warn("superpad: config is not valid JSON, keeping previous:", e)
       }
     }
+    // No file yet is not "wait" -- it means there are no preferences to
+    // protect, so the defaults already standing in are the config and the
+    // first save is safe. Any other read error still holds `ready` low, so a
+    // config that exists but cannot be read is never overwritten with
+    // defaults, which is what this gate is for.
+    onLoadFailed: function(error) {
+      if (error === FileViewError.FileNotFound) root.ready = true
+    }
   }
 
   Connections {

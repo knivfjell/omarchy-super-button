@@ -47,6 +47,7 @@ BarWidget {
   // back, so it needs to see and set the pad's enabled flag.
   property bool padEnabled: true
   property var padCfg: ({})
+  property bool padCfgReady: false
 
   FileView {
     id: padFile
@@ -57,18 +58,25 @@ BarWidget {
       try {
         root.padCfg = JSON.parse(text())
         root.padEnabled = root.padCfg.enabled !== false
+        root.padCfgReady = true
       } catch (e) {
         // A half-written file during someone else's save; the watcher will
         // fire again once it settles.
       }
+    }
+    onLoadFailed: function(error) {
+      if (error === FileViewError.FileNotFound) root.padCfgReady = true
     }
   }
 
   function togglePad() {
     // The pad's own config is the source of truth. Requiring an explicit
     // "enabled" key here used to make the button a silent no-op on a config
-    // that had never been toggled; a missing key just means "showing".
-    if (!root.padCfg || Object.keys(root.padCfg).length === 0) return
+    // that had never been toggled; a missing key just means "showing". A
+    // missing file means the same thing, so gate on having *looked* rather
+    // than on having found something -- an empty config is a real state, not
+    // a reason to refuse.
+    if (!root.padCfgReady) return
     var next = JSON.parse(JSON.stringify(root.padCfg))
     next.enabled = !root.padEnabled
     root.padCfg = next
