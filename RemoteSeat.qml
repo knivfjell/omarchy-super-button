@@ -21,14 +21,16 @@ BarWidget {
   moduleName: "io.github.knivfjell.super-button"
 
   // --- tunables, set per-widget in shell.json -------------------------------
-  // holdMs      how long one click keeps Super engaged before releasing
-  // label       what the button reads when idle
-  // countdown   show the remaining seconds while engaged
-  // lockEnabled right-click latches Super open until clicked again
+  // holdMs        how long one click keeps Super engaged before releasing
+  // label         what the button reads when idle
+  // countdown     show the remaining seconds while engaged
+  // lockEnabled   right-click latches Super open until clicked again
+  // revealOnHover stay collapsed until the bar section is hovered
   readonly property int holdMs: Math.max(250, setting("holdMs", 4000))
   readonly property string idleLabel: setting("label", "SUPER")
   readonly property bool countdown: setting("countdown", true)
   readonly property bool lockEnabled: setting("lockEnabled", true)
+  readonly property bool revealOnHover: setting("revealOnHover", false)
 
   readonly property string submapName: "remote"
 
@@ -166,8 +168,25 @@ BarWidget {
     return idleLabel + " " + Math.min(9, Math.ceil(remainingMs / 1000))
   }
 
-  implicitWidth: layout.implicitWidth
-  implicitHeight: layout.implicitHeight
+  // Mirrors an inactive bar indicator: collapsed to nothing until the pointer
+  // enters the section, and on screen whenever there is state worth reading.
+  // Omarchy holds centerSectionRevealHeld until the pointer leaves the bar
+  // entirely, rather than dropping it on un-hover -- revealing widens the
+  // section, and collapsing again would slide a neighbour back out from under
+  // a stationary pointer. Binding to it inherits that, and degrades to
+  // self-hover on any bar that does not publish the property.
+  //
+  // Engaged and locked are exempt: the face is a live countdown then, and the
+  // only target for letting go. Hiding it would hide both.
+  readonly property bool revealed: !revealOnHover || engaged || locked
+    || selfHover.hovered
+    || (bar && bar.centerSectionRevealHeld === true && bar.centerHoverRevealSuppressed !== true)
+
+  implicitWidth: root.vertical || revealed ? layout.implicitWidth : 0
+  implicitHeight: !root.vertical || revealed ? layout.implicitHeight : 0
+  clip: !revealed
+
+  HoverHandler { id: selfHover }
 
   // Two targets, not one. Middle-click used to be the only way to bring the pad
   // back after its ✕, which is precisely the kind of dependency this whole

@@ -200,7 +200,7 @@ It lives in `~/.config/omarchy/shell.json` on the widget's layout entry, which
 hot-reloads on save:
 
     { "id": "io.github.knivfjell.super-button", "holdMs": 4000, "label": "SUPER",
-      "countdown": true, "lockEnabled": true }
+      "countdown": true, "lockEnabled": true, "revealOnHover": false }
 
 | Setting | Meaning |
 |---|---|
@@ -208,6 +208,14 @@ hot-reloads on save:
 | `label` | Button text |
 | `countdown` | Show remaining seconds while engaged |
 | `lockEnabled` | Whether right-click latches |
+| `revealOnHover` | Keep the button collapsed until its bar section is hovered |
+
+With `revealOnHover` set, the button behaves like one of Omarchy's own inactive
+bar indicators: nothing is drawn until the pointer enters the section it sits
+in, and the reveal is held until the pointer leaves the bar entirely rather
+than collapsing the moment it moves on. It stays on screen for as long as Super
+is engaged or latched, because the face is a live countdown then, and the only
+target for letting go.
 
 ## 6. Other captured keys, and the modifier pad
 
