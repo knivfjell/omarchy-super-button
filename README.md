@@ -23,9 +23,9 @@ Super is not the only casualty:
   taken by the client before it is forwarded.
 
 This plugin gives every one of those functions a path that survives the
-connector, without asking anything of the client. The one thing every connector
-forwards faithfully is **mouse events**, so the modifier becomes a pointer
-target: click Super, then press the key.
+connector, without asking anything of the client. The one pointer event every
+connector forwards faithfully is a **left-click**, so the modifier becomes a
+left-click target: click Super, then press the key.
 
 It needs no particular client, no browser extension, no Keyboard Lock, no
 fullscreen, no HTTPS and no native viewer. A browser-based client over a VPN
@@ -56,11 +56,13 @@ install line, and the button is how you re-open it after its ✕.
 ## Uninstall
 
     omarchy plugin remove io.github.knivfjell.super-button
-    rm ~/.local/state/omarchy/toggles/hypr/remote-seat.lua
 
-The second line is tidiness, not a requirement: the engine checks on every load
-whether the plugin that owns it is still installed, and does nothing if it is
-not. Removing the plugin is enough to stop it.
+That is all. The engine checks on every config load whether the plugin that owns
+it is still installed; on the first load after removal it finds the owner gone,
+deletes its own drop-in at
+`~/.local/state/omarchy/toggles/hypr/remote-seat.lua`, and does nothing else. It
+neither acts nor lingers. (To remove it by hand right away, `rm` that file
+yourself -- a reinstall copies it back.)
 
 ## Files
 
@@ -89,6 +91,13 @@ from `hyprland.lua` on every config load — after every binding is registered.
 The file copied there is static and shipped in the plugin: nothing is generated,
 interpolated, or fetched. It is copied only when it differs, so a shell restart
 costs nothing and Hyprland is reloaded only on a genuine change.
+
+"Static and shipped" describes what the plugin installs, not a guarantee about
+the copy at rest. It lives under your own state directory, so -- like every file
+in your Omarchy config -- any process running as you can rewrite it, and Hyprland
+will load whatever it finds there on the next reload. The engine is not
+privileged and holds no protected state; it runs inside the trust boundary you
+already have with your own account, and nothing here widens it.
 
 Running that late would normally be too late to mirror anything, because the
 usual technique is to wrap `hl.bind` *while* bindings register. So the engine
@@ -175,9 +184,11 @@ the problem. No line, or `mods=-`, means it was swallowed upstream. Then:
 
 ## 5. The Super button — the connector-agnostic answer
 
-Every remote desktop connector forwards **mouse events** faithfully. None of
-them reliably forward Super, because the client's own OS claims it first. So the
-modifier is offered as a pointer target instead of a key.
+Every remote desktop connector forwards a **left-click** faithfully; right- and
+middle-click are not (a browser-based client keeps them for its own menu and
+paste), which is why the button is left-click only. None of them reliably
+forward Super, because the client's own OS claims it first. So the modifier is
+offered as a left-click target instead of a key.
 
 A `SUPER` button sits on the bar, left of the workspaces. Click it, then press
 the key. `SUPER + W` becomes *click, then W*.

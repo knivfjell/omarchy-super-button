@@ -7,7 +7,7 @@ import qs.Commons
 
 // A Super key you click instead of press.
 //
-// Every remote desktop connector forwards mouse events faithfully; none of them
+// Every remote desktop connector forwards a left-click faithfully; none of them
 // reliably forward Super, because the client's own OS claims it first. So the
 // modifier is offered as a pointer target rather than a key, which makes it
 // connector-agnostic by construction: a browser-based client, a native VNC or

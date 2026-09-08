@@ -250,6 +250,7 @@ function M.capture()
     package.loaded[name] = nil
   end
 
+  local failed = false
   for _, name in ipairs(binding_modules()) do
     if snapshot[name] == nil then
       snapshot[name] = package.loaded[name]
@@ -258,10 +259,19 @@ function M.capture()
 
     local ok, err = pcall(require, name)
     if not ok then
+      -- Fail closed. A module that threw under stubs mirrored only the bindings
+      -- it reached before it errored; a layer built from that is a partial,
+      -- wrong mirror -- worse than none, because it looks like it worked. Stop,
+      -- record why, and let the caller decline to install.
       M.capture_errors[#M.capture_errors + 1] = name .. ": " .. tostring(err)
+      failed = true
+      break
     end
   end
 
+  -- Restore unconditionally -- the failure path included. The config namespace
+  -- was cleared and the mutating hl API stubbed for the duration; leaving either
+  -- in place would break the user's whole config, not just our mirror.
   for name, module in pairs(snapshot) do
     package.loaded[name] = module
   end
@@ -269,6 +279,13 @@ function M.capture()
   hl.bind = real_bind
   for _, name in ipairs(NEUTRALISE) do
     hl[name] = saved[name]
+  end
+
+  if failed then
+    -- Discard the partial capture so nothing downstream can build from it.
+    for i = #captured, 1, -1 do captured[i] = nil end
+    for k in pairs(seen) do seen[k] = nil end
+    M.capture_failed = true
   end
 
   return M
@@ -901,10 +918,23 @@ end
 
 M.orphaned = not owner_installed()
 
+if M.orphaned then
+  -- Clean up after ourselves. `omarchy plugin remove` deletes the plugin but
+  -- not this drop-in, and Hyprland require()s the toggles dir on every config
+  -- load, so an orphaned copy is litter that reloads forever. On the first load
+  -- after removal the owner is gone: delete our own copy. Safe -- the file is
+  -- already read into memory, os.remove of an absent file is harmless, and a
+  -- reinstall copies it back on the next shell load.
+  local xdg = os.getenv("XDG_STATE_HOME")
+  local state = (xdg and xdg ~= "") and xdg or ((os.getenv("HOME") or "") .. "/.local/state")
+  os.remove(state .. "/omarchy/toggles/hypr/remote-seat.lua")
+end
+
 -- Both halves, at the only point where both are possible.
 if not M.orphaned then
   M.capture()
-  M.install()
+  -- Fail closed: an incomplete capture must not become a partial layer.
+  if not M.capture_failed then M.install() end
 end
 
 return M

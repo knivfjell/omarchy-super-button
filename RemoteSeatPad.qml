@@ -7,10 +7,10 @@ import qs.Commons
 
 // A floating pad of clickable modifiers, placeable anywhere in the workspace.
 //
-// Remote desktop connectors forward mouse events faithfully and modifier chords
+// Remote desktop connectors forward a left-click faithfully but modifier chords
 // unreliably: the controlling machine's OS and browser claim Super, Alt+Tab and
-// Ctrl+T before the page ever sees them. So the modifiers are offered as pointer
-// targets and the chord is assembled on this side.
+// Ctrl+T before the page ever sees them. So the modifiers are offered as
+// left-click targets and the chord is assembled on this side.
 //
 // The pad has two modes, because "send a modifier" means two different things.
 //
